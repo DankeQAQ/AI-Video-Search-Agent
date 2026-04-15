@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>视频搜索 Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c0f14;
+      --bg2: #121826;
+      --card: #161d2c;
+      --border: #243047;
+      --text: #e8edf7;
+      --muted: #8b9bb8;
+      --accent: #5b8cff;
+      --accent2: #3dd6c6;
+      --danger: #ff6b7a;
+      --warn: #ffc857;
+      --radius: 14px;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "DM Sans", system-ui, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(91, 140, 255, 0.18), transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, rgba(61, 214, 198, 0.12), transparent 50%),
+        var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    h1 {
+      font-size: 1.55rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 0.95rem;
+      max-width: 52ch;
+      line-height: 1.5;
+    }
+    .links a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .links a:hover { text-decoration: underline; }
+    .panel {
+      background: linear-gradient(145deg, rgba(22, 29, 44, 0.95), rgba(18, 24, 38, 0.92));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 20px 18px;
+      box-shadow: var(--shadow);
+    }
+    label {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 110px;
+      resize: vertical;
+      padding: 14px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg2);
+      color: var(--text);
+      font-size: 1rem;
+      line-height: 1.5;
+      outline: none;
+    }
+    textarea:focus {
+      border-color: rgba(91, 140, 255, 0.65);
+      box-shadow: 0 0 0 3px rgba(91, 140, 255, 0.18);
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    button {
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+    button:active { transform: translateY(1px); }
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #5b8cff, #4a6fe0);
+      color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) {
+      filter: brightness(1.06);
+    }
+    .btn-secondary {
+      background: rgba(61, 214, 198, 0.12);
+      color: var(--accent2);
+      border-color: rgba(61, 214, 198, 0.35);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: rgba(61, 214, 198, 0.2);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border-color: var(--border);
+    }
+    .btn-ghost:hover:not(:disabled) {
+      border-color: rgba(91, 140, 255, 0.45);
+    }
+    .section {
+      margin-top: 22px;
+      scroll-margin-top: 20px;
+    }
+    .section h2 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin: 0 0 10px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+    .error {
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: rgba(255, 107, 122, 0.12);
+      border: 1px solid rgba(255, 107, 122, 0.35);
+      color: #ffb3bc;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .kv {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .kv span {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .kv strong {
+      font-size: 0.98rem;
+      font-weight: 600;
+    }
+    .poster {
+      float: right;
+      width: min(160px, 38%);
+      margin: 0 0 12px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .meta-block { overflow: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    tr:last-child td { border-bottom: none; }
+    .badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 999px;
+      letter-spacing: 0.03em;
+    }
+    .b-bili { background: rgba(251, 114, 153, 0.18); color: #ffb3cc; }
+    .b-nf { background: rgba(229, 9, 20, 0.22); color: #ff9aa2; }
+    .b-yt { background: rgba(255, 0, 0, 0.18); color: #ff9e9e; }
+    .b-main { background: rgba(91, 140, 255, 0.18); color: #b8ceff; }
+    .b-third { background: rgba(139, 155, 184, 0.15); color: #c9d4e8; }
+    .link-row a {
+      color: var(--accent);
+      word-break: break-all;
+      text-decoration: none;
+    }
+    .link-row a:hover { text-decoration: underline; }
+    .mono {
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-size: 0.82rem;
+    }
+    footer {
+      margin-top: 36px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    code { color: var(--accent2); }
+    html { scroll-behavior: smooth; }
+    .section.result-panel {
+      opacity: 0;
+      animation: sectionFadeIn 0.48s ease forwards;
+    }
+    @keyframes sectionFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    button.is-loading {
+      opacity: 0.88;
+      cursor: wait;
+      pointer-events: none;
+    }
+    .search-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .search-head h2 {
+      margin-bottom: 0;
+    }
+    .search-count {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    tr.search-row-more[hidden] {
+      display: none;
+    }
+    .search-more-lead {
+      margin: 10px 12px 0;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    #btn-search-more {
+      margin: 8px 12px 12px;
+    }
+    .link-cell-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-start;
+      max-width: 100%;
+    }
+    .link-source-meta {
+      font-size: 0.75rem;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+    .domain-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+    }
+    .domain-pill--yt {
+      background: rgba(34, 197, 94, 0.14);
+      border-color: rgba(34, 197, 94, 0.5);
+      color: #4ade80;
+    }
+    .yt-rec {
+      margin-left: 6px;
+      font-weight: 600;
+      color: #4ade80;
+    }
+    .domain-pill--bili {
+      background: rgba(251, 114, 153, 0.14);
+      border-color: rgba(251, 114, 153, 0.55);
+      color: #fb7185;
+    }
+    .domain-pill--official {
+      background: rgba(52, 211, 153, 0.14);
+      border-color: rgba(52, 211, 153, 0.5);
+      color: #34d399;
+    }
+    .official-rec {
+      margin-left: 6px;
+      font-weight: 600;
+      color: #34d399;
+    }
+    .bili-hot {
+      margin-left: 6px;
+      font-weight: 600;
+      color: #fb7185;
+    }
+    .third-party-label {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 500;
+    }
+    .third-party-hint {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 0.68rem;
+      line-height: 1.4;
+      opacity: 0.92;
+    }
+    .ad-caution {
+      margin-top: 4px;
+      color: #fbbf24;
+      font-size: 0.72rem;
+    }
+    .shell {
+      max-width: 960px;
+      margin: 0 auto;
+      position: relative;
+      padding: 0 20px 64px;
+    }
+    .mini-nav {
+      position: fixed;
+      right: max(16px, calc(50vw - 520px));
+      top: 42%;
+      transform: translateY(-50%);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px 12px;
+      background: rgba(18, 24, 38, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      font-size: 0.78rem;
+      max-width: 120px;
+    }
+    .mini-nav[hidden] {
+      display: none !important;
+    }
+    .mini-nav span {
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+    .mini-nav a {
+      color: var(--accent);
+      text-decoration: none;
+      padding: 4px 0;
+      border-radius: 6px;
+      transition: color 0.15s ease;
+    }
+    .mini-nav a:hover {
+      color: var(--accent2);
+      text-decoration: underline;
+    }
+    @media (max-width: 1080px) {
+      .mini-nav {
+        display: none;
+      }
+    }
+    .input-find-row {
+      display: flex;
+      gap: 14px;
+      align-items: stretch;
+    }
+    .input-find-row textarea {
+      flex: 1;
+      min-width: 0;
+    }
+    .find-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
+      justify-content: flex-start;
+    }
+    .btn-find-main {
+      font-family: inherit;
+      font-size: 1.05rem;
+      font-weight: 700;
+      padding: 14px 22px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+      color: #0c0f14;
+      background: linear-gradient(145deg, #7eb0ff 0%, #5b8cff 40%, #3dd6c6 100%);
+      box-shadow: 0 10px 28px rgba(91, 140, 255, 0.35);
+      transition: transform 0.08s ease, filter 0.15s ease, opacity 0.15s ease;
+    }
+    .btn-find-main:hover:not(:disabled) {
+      filter: brightness(1.06);
+    }
+    .btn-find-main:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+    .btn-find-main:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    .btn-find-main.is-loading {
+      cursor: wait;
+      pointer-events: none;
+      opacity: 0.85;
+    }
+    .pipeline-status {
+      margin: 0;
+      font-size: 0.78rem;
+      color: var(--accent2);
+      line-height: 1.45;
+      max-width: 11rem;
+      min-height: 2.6em;
+    }
+    .pipeline-status[hidden] {
+      display: none !important;
+    }
+    .debug-details {
+      margin-top: 14px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+    .debug-details > summary {
+      cursor: pointer;
+      font-size: 0.82rem;
+      color: var(--muted);
+      user-select: none;
+      list-style: none;
+    }
+    .debug-details > summary::-webkit-details-marker {
+      display: none;
+    }
+    .debug-details > summary::before {
+      content: "▸ ";
+      display: inline-block;
+      transition: transform 0.15s ease;
+    }
+    .debug-details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .debug-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+      align-items: center;
+    }
+    .btn-iconish {
+      font-size: 0.8rem;
+      padding: 6px 12px;
+      font-weight: 600;
+    }
+    @media (max-width: 600px) {
+      .input-find-row {
+        flex-direction: column;
+      }
+      .find-col {
+        width: 100%;
+      }
+      .btn-find-main {
+        width: 100%;
+      }
+      .pipeline-status {
+        max-width: none;
+      }
+    }
+    .overseas-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+    }
+    .overseas-toggle input {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .overseas-banner {
+      margin: 0 0 12px;
+      padding: 10px 14px;
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--warn);
+      background: rgba(255, 200, 87, 0.1);
+      border: 1px solid rgba(255, 200, 87, 0.35);
+      border-radius: 10px;
+    }
+    .overseas-banner[hidden] {
+      display: none !important;
+    }
+    .access-note {
+      font-size: 0.72rem;
+      color: var(--warn);
+      line-height: 1.35;
+      max-width: 12rem;
+    }
+    td.cell-muted {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <nav class="mini-nav" id="mini-nav" aria-label="结果区块导航" hidden>
+    <span>跳转</span>
+    <a href="#sec-intent" data-jump="sec-intent">① 结构化意图</a>
+    <a href="#sec-tmdb" data-jump="sec-tmdb">② TMDB</a>
+    <a href="#sec-search" data-jump="sec-search">③ 搜索结果</a>
+  </nav>
+  <div class="shell">
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>视频搜索 Agent</h1>
+        <p class="sub">输入视频名称后点击「立即找片」，将自动完成解析</p>
+      </div>
+      <div class="links">
+        <a href="/docs" target="_blank" rel="noreferrer">OpenAPI 文档</a>
+      </div>
+    </header>
+
+    <div class="panel">
+      <label for="q">想看点什么？</label>
+      <div class="input-find-row">
+        <textarea id="q" placeholder="例如：我想看黑执事第三季第一集（Enter 提交，Shift+Enter 换行）"></textarea>
+        <div class="find-col">
+          <button type="button" class="btn-find-main" id="btn-find">立即找片</button>
+          <p class="pipeline-status" id="pipeline-status" hidden aria-live="polite"></p>
+          <label class="overseas-toggle" title="优化检索词，优先海外友好站点并标注国内站">
+            <input type="checkbox" id="chk-overseas" />
+            <span>我在海外</span>
+          </label>
+        </div>
+      </div>
+      <details class="debug-details" id="debug-details">
+        <summary>手动 / 调试模式</summary>
+        <div class="debug-actions">
+          <button type="button" class="btn-primary btn-iconish" id="btn-parse" title="仅解析意图">① 解析</button>
+          <button type="button" class="btn-secondary btn-iconish" id="btn-tmdb" disabled title="仅对齐 TMDB">② TMDB</button>
+          <button type="button" class="btn-secondary btn-iconish" id="btn-search" disabled title="仅搜索">③ 搜索</button>
+          <button type="button" class="btn-ghost btn-iconish" id="btn-clear">清空</button>
+        </div>
+      </details>
+    </div>
+
+    <div class="section" id="err-box" hidden>
+      <h2>错误</h2>
+      <div class="error" id="err"></div>
+    </div>
+
+    <div class="section" id="sec-intent" hidden>
+      <h2>结构化意图</h2>
+      <div class="grid" id="intent-grid"></div>
+    </div>
+
+    <div class="section" id="sec-tmdb" hidden>
+      <h2>TMDB 元数据</h2>
+      <div class="panel meta-block" id="tmdb-body"></div>
+    </div>
+
+    <div class="section" id="sec-search" hidden>
+      <div class="search-head">
+        <h2>搜索候选</h2>
+        <span class="search-count" id="search-count" hidden></span>
+      </div>
+      <p id="overseas-vpn-banner" class="overseas-banner" hidden></p>
+      <p class="search-hint" id="search-hint" style="margin:0 0 10px;font-size:0.85rem;color:var(--muted);display:none">
+        以下为第三方检索返回的链接摘要，平台标签仅供参考。结果较多时请向下滚动查看；宽屏下可使用右侧「跳转」面板快速定位各区块。
+      </p>
+      <div class="panel" style="padding: 0; overflow: hidden;">
+        <table>
+          <thead>
+            <tr>
+              <th>平台</th>
+              <th>访问提示</th>
+              <th>标题</th>
+              <th>链接</th>
+            </tr>
+          </thead>
+          <tbody id="search-rows"></tbody>
+        </table>
+        <p class="search-more-lead" id="search-more-lead" hidden></p>
+        <button type="button" class="btn-secondary" id="btn-search-more" hidden>
+          显示更多可疑结果
+        </button>
+      </div>
+    </div>
+
+    <footer>
+      说明：本页由 FastAPI 提供；仅作能力与合规标注演示。请遵守各平台版权与使用条款。
+      <br />健康检查：<code>/health</code> · API 前缀：<code>/api/v1</code>
+    </footer>
+  </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const API = "";
+
+    let lastIntent = null;
+    let lastMeta = null;
+
+    let pipelineRunning = false;
+
+    const defaultLabels = {
+      "btn-parse": "① 解析",
+      "btn-tmdb": "② TMDB",
+      "btn-search": "③ 搜索",
+    };
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function setPipelinePhase(text) {
+      const el = $("pipeline-status");
+      if (!el) return;
+      if (!text) {
+        el.hidden = true;
+        el.textContent = "";
+        return;
+      }
+      el.hidden = false;
+      el.textContent = text;
+    }
+
+    function refreshStepButtonsState() {
+      if (pipelineRunning) return;
+      const bf = $("btn-find");
+      if (bf) {
+        bf.disabled = false;
+        bf.textContent = "搜索播放源";
+        bf.classList.remove("is-loading");
+      }
+      $("btn-parse").disabled = false;
+      $("btn-clear").disabled = false;
+      $("btn-tmdb").disabled = !lastIntent;
+      $("btn-search").disabled = !lastIntent;
+    }
+
+    function scrollSoonTo(sectionId) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => scrollToSection(sectionId));
+      });
+    }
+
+    function setButtonLoading(id, loading) {
+      const btn = $(id);
+      if (!btn) return;
+      if (!btn.dataset.defaultLabel) {
+        btn.dataset.defaultLabel = defaultLabels[id] || btn.textContent.trim();
+      }
+      btn.classList.toggle("is-loading", loading);
+      btn.disabled = loading;
+      btn.textContent = loading ? "处理中..." : btn.dataset.defaultLabel;
+    }
+
+    function scrollToSection(sectionId) {
+      const el = document.getElementById(sectionId);
+      if (!el || el.hidden) return;
+      el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    function triggerSectionAnimation(sectionEl) {
+      if (!sectionEl) return;
+      sectionEl.classList.remove("result-panel");
+      void sectionEl.offsetWidth;
+      sectionEl.classList.add("result-panel");
+    }
+
+    function updateMiniNav() {
+      const nav = $("mini-nav");
+      const hasIntent = !$("sec-intent").hidden;
+      const hasTmdb = !$("sec-tmdb").hidden;
+      const hasSearch = !$("sec-search").hidden;
+      if (hasIntent || hasTmdb || hasSearch) {
+        nav.hidden = false;
+      } else {
+        nav.hidden = true;
+      }
+      nav.querySelectorAll("a").forEach((a) => {
+        const id = a.getAttribute("data-jump");
+        const target = id && document.getElementById(id);
+        a.style.opacity = target && !target.hidden ? "1" : "0.35";
+        a.style.pointerEvents = target && !target.hidden ? "" : "none";
+      });
+    }
+
+    document.querySelectorAll(".mini-nav a[data-jump]").forEach((a) => {
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        const id = a.getAttribute("data-jump");
+        const el = id && document.getElementById(id);
+        if (el && !el.hidden) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+    });
+
+    function showError(msg) {
+      if (!msg) {
+        $("err-box").hidden = true;
+        $("err").textContent = "";
+        return;
+      }
+      $("err-box").hidden = false;
+      $("err").textContent = msg;
+    }
+
+    function badgeClass(p) {
+      if (p === "bilibili") return "b-bili";
+      if (p === "netflix") return "b-nf";
+      if (p === "youtube") return "b-yt";
+      if (p === "mainstream_other") return "b-main";
+      return "b-third";
+    }
+
+    function renderIntent(data) {
+      const g = $("intent-grid");
+      g.innerHTML = "";
+      const keys = [
+        ["title", "标准译名"],
+        ["original_title", "原文标题"],
+        ["media_type", "类型"],
+        ["season", "季"],
+        ["episode", "集"],
+        ["season_official_name", "篇章官方名"],
+      ];
+      for (const [k, label] of keys) {
+        const v = data[k];
+        const el = document.createElement("div");
+        el.className = "kv";
+        el.innerHTML = `<span>${label}</span><strong>${v == null || v === "" ? "—" : String(v)}</strong>`;
+        g.appendChild(el);
+      }
+      $("sec-intent").hidden = false;
+      triggerSectionAnimation($("sec-intent"));
+      updateMiniNav();
+    }
+
+    function renderTmdbSkipped(reason) {
+      const box = $("tmdb-body");
+      const short = escapeHtml((reason || "").slice(0, 220));
+      box.innerHTML =
+        "<p style='margin:0;color:var(--muted);line-height:1.55'>已跳过 TMDB 对齐，将使用上一步解析结果继续搜索。<br/><span class='mono' style='font-size:0.75rem;opacity:0.9'>" +
+        short +
+        "</span></p>";
+      $("sec-tmdb").hidden = false;
+      triggerSectionAnimation($("sec-tmdb"));
+      updateMiniNav();
+    }
+
+    function renderTmdb(m) {
+      const box = $("tmdb-body");
+      if (!m.found) {
+        box.innerHTML =
+          "<p style='margin:0;color:var(--muted)'>未在 TMDB 命中条目，将使用解析标题继续搜索。</p>";
+        $("sec-tmdb").hidden = false;
+        triggerSectionAnimation($("sec-tmdb"));
+        updateMiniNav();
+        return;
+      }
+      const poster = m.poster_url
+        ? `<img class="poster" alt="poster" src="${m.poster_url.replace(/"/g, "")}" />`
+        : "";
+      const rows = (m.aliases || [])
+        .slice(0, 40)
+        .map(
+          (a) =>
+            `<tr><td class="mono">${a.language}</td><td>${a.scope}</td><td>${a.title}</td></tr>`
+        )
+        .join("");
+      box.innerHTML = `
+        ${poster}
+        <div style="margin-bottom:10px">
+          <div class="kv" style="display:inline-block;min-width:200px;margin-right:10px;margin-bottom:10px">
+            <span>TMDB ID</span><strong>${m.tmdb_id} · ${m.tmdb_media || ""}</strong>
+          </div>
+          <div class="kv" style="display:inline-block;min-width:200px;margin-bottom:10px">
+            <span>主标题</span><strong>${m.primary_title || "—"}</strong>
+          </div>
+          <div class="kv" style="display:inline-block;min-width:120px;margin-bottom:10px">
+            <span>年份</span><strong>${m.year ?? "—"}</strong>
+          </div>
+        </div>
+        <h2 style="font-size:0.85rem;margin:12px 0 8px">别名（节选）</h2>
+        <table>
+          <thead><tr><th>语言</th><th>范围</th><th>标题</th></tr></thead>
+          <tbody>${rows || "<tr><td colspan='3'>无</td></tr>"}</tbody>
+        </table>
+      `;
+      $("sec-tmdb").hidden = false;
+      triggerSectionAnimation($("sec-tmdb"));
+      updateMiniNav();
+    }
+
+    function overseasChecked() {
+      const c = $("chk-overseas");
+      return c && c.checked === true;
+    }
+
+    function normalizeSearchPayload(raw) {
+      if (raw && Array.isArray(raw.hits)) {
+        return {
+          rows: raw.hits,
+          moreRows: Array.isArray(raw.more_hits) ? raw.more_hits : [],
+          moreNotice:
+            typeof raw.more_hits_notice === "string" && raw.more_hits_notice.trim()
+              ? raw.more_hits_notice.trim()
+              : "以下链接匹配度较低或来源一般，请小心广告与钓鱼页。",
+          show_domestic_vpn_hint: !!raw.show_domestic_vpn_hint,
+        };
+      }
+      if (Array.isArray(raw)) {
+        return {
+          rows: raw,
+          moreRows: [],
+          moreNotice: "",
+          show_domestic_vpn_hint: false,
+        };
+      }
+      return { rows: [], moreRows: [], moreNotice: "", show_domestic_vpn_hint: false };
+    }
+
+    function appendSearchRow(tb, r, { moreRow = false } = {}) {
+      const tr = document.createElement("tr");
+      tr.className = moreRow ? "link-row search-row-more" : "link-row";
+      if (moreRow) {
+        tr.hidden = true;
+      }
+      const td1 = document.createElement("td");
+      td1.innerHTML = `<span class="badge ${badgeClass(r.platform)}">${r.platform}</span>`;
+      const td2 = document.createElement("td");
+      td2.innerHTML = r.access_note
+        ? `<div class="access-note">${escapeHtml(r.access_note)}</div>`
+        : "<span class='cell-muted'>—</span>";
+      const td3 = document.createElement("td");
+      td3.textContent = r.title != null && r.title !== "" ? String(r.title) : "—";
+      const td4 = document.createElement("td");
+      const wrap = document.createElement("div");
+      wrap.className = "link-cell-wrap";
+      const a = document.createElement("a");
+      a.href = r.url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = r.url;
+      wrap.appendChild(a);
+      const src = document.createElement("div");
+      src.className = "link-source-meta";
+      const dom =
+        r.display_domain != null && String(r.display_domain).trim()
+          ? String(r.display_domain).trim()
+          : "—";
+      const official =
+        r.official_recommend_badge ||
+        r.youtube_recommend_badge ||
+        r.bilibili_hot_badge;
+      if (official) {
+        src.innerHTML =
+          '<span class="domain-pill domain-pill--official">域名来源：' +
+          escapeHtml(dom) +
+          '</span><span class="official-rec">官方/推荐</span>';
+      } else {
+        src.innerHTML =
+          '<span class="domain-pill">域名来源：' + escapeHtml(dom) + "</span>";
+        if (r.third_party_ad_caution) {
+          const tp = document.createElement("div");
+          tp.className = "third-party-label";
+          tp.textContent = "第三方资源";
+          src.appendChild(tp);
+          const hint = document.createElement("div");
+          hint.className = "third-party-hint";
+          hint.textContent =
+            "第三方网站可能含有弹窗广告，请注意保护隐私";
+          src.appendChild(hint);
+        }
+      }
+      wrap.appendChild(src);
+      td4.appendChild(wrap);
+      tr.append(td1, td2, td3, td4);
+      tb.appendChild(tr);
+    }
+
+    function renderSearch(payload) {
+      const { rows, moreRows, moreNotice, show_domestic_vpn_hint } =
+        normalizeSearchPayload(payload);
+      const tb = $("search-rows");
+      const countEl = $("search-count");
+      const hintEl = $("search-hint");
+      const vpnBanner = $("overseas-vpn-banner");
+      const moreLead = $("search-more-lead");
+      const btnMore = $("btn-search-more");
+      tb.innerHTML = "";
+      countEl.hidden = true;
+      hintEl.style.display = "none";
+      moreLead.hidden = true;
+      moreLead.textContent = "";
+      btnMore.hidden = true;
+      btnMore.onclick = null;
+      if (vpnBanner) {
+        vpnBanner.hidden = true;
+        vpnBanner.textContent = "";
+      }
+      const totalShown = rows.length + moreRows.length;
+      if (!totalShown) {
+        tb.innerHTML = "<tr><td colspan='4'>无结果</td></tr>";
+        $("sec-search").hidden = false;
+        triggerSectionAnimation($("sec-search"));
+        updateMiniNav();
+        return;
+      }
+      const primaryN = rows.length;
+      const moreN = moreRows.length;
+      countEl.textContent =
+        moreN > 0
+          ? `优先展示 ${primaryN} 条` + (moreN ? ` · 另有 ${moreN} 条可展开查看` : "")
+          : "共 " + primaryN + " 条链接";
+      countEl.hidden = false;
+      if (totalShown >= 8) {
+        hintEl.style.display = "block";
+      }
+      if (vpnBanner && overseasChecked() && show_domestic_vpn_hint) {
+        vpnBanner.hidden = false;
+        vpnBanner.textContent =
+          "检测到您在澳洲等海外环境：下列部分链接指向国内版权站，可能需要穿梭 / 回国 VPN 才能正常播放。";
+      }
+      for (const r of rows) {
+        appendSearchRow(tb, r, { moreRow: false });
+      }
+      for (const r of moreRows) {
+        appendSearchRow(tb, r, { moreRow: true });
+      }
+      if (moreRows.length > 0) {
+        moreLead.textContent = moreNotice;
+        moreLead.hidden = false;
+        btnMore.hidden = false;
+        btnMore.onclick = () => {
+          tb.querySelectorAll("tr.search-row-more").forEach((tr) => {
+            tr.hidden = false;
+          });
+          btnMore.hidden = true;
+          moreLead.textContent =
+            "（已展开）请仍注意广告、诱导下载、钓鱼页与版权风险。";
+          moreLead.hidden = false;
+        };
+      }
+      $("sec-search").hidden = false;
+      triggerSectionAnimation($("sec-search"));
+      updateMiniNav();
+    }
+
+    async function postJSON(path, body) {
+      const res = await fetch(API + path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const text = await res.text();
+      let data;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        throw new Error(text || res.statusText);
+      }
+      if (!res.ok) {
+        let detail = data && data.detail != null ? data.detail : text;
+        if (Array.isArray(detail)) {
+          detail = detail
+            .map((d) => (d && (d.msg || d.message)) || JSON.stringify(d))
+            .join("; ");
+        }
+        throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+      }
+      return data;
+    }
+
+    const emptyMeta = () => ({
+      found: false,
+      tmdb_id: null,
+      tmdb_media: null,
+      poster_url: null,
+      year: null,
+      primary_title: null,
+      aliases: [],
+      credit_names: [],
+    });
+
+    async function runFullPipeline() {
+      if (pipelineRunning) return;
+      const q = $("q").value.trim();
+      if (!q) {
+        showError("请先输入内容。");
+        return;
+      }
+      showError(null);
+      pipelineRunning = true;
+      const btnFind = $("btn-find");
+      ["btn-find", "btn-parse", "btn-tmdb", "btn-search", "btn-clear"].forEach((id) => {
+        const b = $(id);
+        if (b) b.disabled = true;
+      });
+      if (btnFind) {
+        btnFind.classList.add("is-loading");
+        btnFind.textContent = "找片中…";
+      }
+      setPipelinePhase("正在理解意图…");
+
+      try {
+        lastIntent = null;
+        lastMeta = null;
+        $("sec-intent").hidden = true;
+        $("sec-tmdb").hidden = true;
+        $("sec-search").hidden = true;
+        updateMiniNav();
+
+        lastIntent = await postJSON("/api/v1/parse", { query: q });
+        renderIntent(lastIntent);
+        scrollSoonTo("sec-intent");
+
+        setPipelinePhase("正在匹配官方库…");
+        try {
+          lastMeta = await postJSON("/api/v1/tmdb", {
+            title: lastIntent.title,
+            original_title: lastIntent.original_title,
+            media_type: lastIntent.media_type,
+            season: lastIntent.season,
+          });
+          renderTmdb(lastMeta);
+        } catch (te) {
+          console.warn("[pipeline] TMDB 跳过:", te);
+          lastMeta = emptyMeta();
+          renderTmdbSkipped(String(te.message || te));
+        }
+        scrollSoonTo("sec-tmdb");
+
+        setPipelinePhase("正在搜寻播放源…");
+        const searchRes = await postJSON("/api/v1/search", {
+          intent: lastIntent,
+          metadata: lastMeta || emptyMeta(),
+          overseas_mode: overseasChecked(),
+        });
+        renderSearch(searchRes);
+        scrollSoonTo("sec-search");
+
+        setPipelinePhase("完成");
+        setTimeout(() => setPipelinePhase(""), 1600);
+      } catch (e) {
+        showError(String(e.message || e));
+        setPipelinePhase("");
+      } finally {
+        pipelineRunning = false;
+        if (btnFind) {
+          btnFind.classList.remove("is-loading");
+          btnFind.textContent = "立即找片";
+        }
+        refreshStepButtonsState();
+      }
+    }
+
+    $("btn-find").onclick = () => runFullPipeline();
+
+    $("q").addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || e.shiftKey) return;
+      e.preventDefault();
+      if (pipelineRunning) return;
+      runFullPipeline();
+    });
+
+    $("btn-parse").onclick = async () => {
+      if (pipelineRunning) return;
+      showError(null);
+      const q = $("q").value.trim();
+      if (!q) {
+        showError("请先输入内容。");
+        return;
+      }
+      setButtonLoading("btn-parse", true);
+      try {
+        lastIntent = await postJSON("/api/v1/parse", { query: q });
+        lastMeta = null;
+        renderIntent(lastIntent);
+        $("btn-tmdb").disabled = false;
+        $("btn-search").disabled = true;
+        $("sec-tmdb").hidden = true;
+        $("sec-search").hidden = true;
+        updateMiniNav();
+        scrollToSection("sec-intent");
+      } catch (e) {
+        showError(String(e.message || e));
+      } finally {
+        setButtonLoading("btn-parse", false);
+        refreshStepButtonsState();
+      }
+    };
+
+    $("btn-tmdb").onclick = async () => {
+      if (pipelineRunning) return;
+      showError(null);
+      if (!lastIntent) return;
+      setButtonLoading("btn-tmdb", true);
+      try {
+        lastMeta = await postJSON("/api/v1/tmdb", {
+          title: lastIntent.title,
+          original_title: lastIntent.original_title,
+          media_type: lastIntent.media_type,
+          season: lastIntent.season,
+        });
+        renderTmdb(lastMeta);
+        $("btn-search").disabled = false;
+        scrollToSection("sec-tmdb");
+      } catch (e) {
+        showError(String(e.message || e));
+      } finally {
+        setButtonLoading("btn-tmdb", false);
+        refreshStepButtonsState();
+      }
+    };
+
+    $("btn-search").onclick = async () => {
+      if (pipelineRunning) return;
+      showError(null);
+      if (!lastIntent) return;
+      const meta = lastMeta || emptyMeta();
+      setButtonLoading("btn-search", true);
+      try {
+        const searchRes = await postJSON("/api/v1/search", {
+          intent: lastIntent,
+          metadata: meta,
+          overseas_mode: overseasChecked(),
+        });
+        renderSearch(searchRes);
+        scrollToSection("sec-search");
+      } catch (e) {
+        showError(String(e.message || e));
+      } finally {
+        setButtonLoading("btn-search", false);
+        refreshStepButtonsState();
+      }
+    };
+
+    $("btn-clear").onclick = () => {
+      if (pipelineRunning) return;
+      $("q").value = "";
+      lastIntent = null;
+      lastMeta = null;
+      showError(null);
+      setPipelinePhase("");
+      $("sec-intent").hidden = true;
+      $("sec-tmdb").hidden = true;
+      $("sec-search").hidden = true;
+      $("btn-tmdb").disabled = true;
+      $("btn-search").disabled = true;
+      $("search-count").hidden = true;
+      $("search-hint").style.display = "none";
+      const sm = $("btn-search-more");
+      const sl = $("search-more-lead");
+      if (sm) {
+        sm.hidden = true;
+        sm.onclick = null;
+      }
+      if (sl) {
+        sl.hidden = true;
+        sl.textContent = "";
+      }
+      const vb = $("overseas-vpn-banner");
+      if (vb) {
+        vb.hidden = true;
+        vb.textContent = "";
+      }
+      ["sec-intent", "sec-tmdb", "sec-search"].forEach((id) => {
+        const s = $(id);
+        if (s) s.classList.remove("result-panel");
+      });
+      updateMiniNav();
+      refreshStepButtonsState();
+    };
+  </script>
+</body>
+</html>

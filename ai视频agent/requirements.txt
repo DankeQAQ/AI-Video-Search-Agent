@@ -1,0 +1,22 @@
+# Web
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+
+# Data & settings
+pydantic>=2.9.0
+pydantic-settings>=2.6.0
+
+# HTTP
+httpx>=0.27.0
+
+# Search
+tavily-python>=0.5.0
+
+# LLM & Agent
+openai>=1.55.0
+langchain>=0.3.0
+langchain-openai>=0.2.0
+anthropic>=0.39.0
+
+# Env
+python-dotenv>=1.0.1
